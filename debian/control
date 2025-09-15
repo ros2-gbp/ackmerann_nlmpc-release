@@ -1,0 +1,12 @@
+Source: ros-jazzy-ackermann-nlmpc
+Section: misc
+Priority: optional
+Maintainer: Jasper Pflughaupt <j.pflughaupt@uni-luebeck.de>
+Build-Depends: debhelper (>= 9.0.0), python3-pytest <!nocheck>, ros-jazzy-ackermann-msgs, ros-jazzy-ackermann-nlmpc-msgs, ros-jazzy-ament-pep257 <!nocheck>, ros-jazzy-geometry-msgs, ros-jazzy-nav-msgs, ros-jazzy-std-msgs, ros-jazzy-ros-workspace, python3-all, python3-setuptools, dh-python
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-ackermann-nlmpc
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, ros-jazzy-ackermann-msgs, ros-jazzy-ackermann-nlmpc-msgs, ros-jazzy-geometry-msgs, ros-jazzy-nav-msgs, ros-jazzy-std-msgs, ros-jazzy-ros-workspace
+Description: Lightweight non-linear MPC controller for autonomous driving in 2D environments
