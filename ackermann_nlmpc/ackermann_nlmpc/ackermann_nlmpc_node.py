@@ -320,36 +320,77 @@ class NLMPCNode(Node):
             package_path = get_package_share_directory('ackermann_nlmpc')
             lib_path = os.path.join(package_path, lib_path)
         self.get_logger().debug(f'Library path: {lib_path}')
-        # Check if the library has been compiled, compile if necessary
         path, ext = os.path.splitext(lib_path)
+        c_path = path + '.c'
+        so_path = path + '.so'
+        so_fallback_path = os.path.join(os.path.expanduser('~'), '.ros', 'ackermann_nlmpc', 'codegen', f'{os.path.basename(path)}.so')
+        # If path parameter ends with .c, always compile.
         if ext == '.c':
             self.get_logger().debug('Compiling C code to .so file...')
-            self._compile_lib(path)
+            # Check if path is writable
+            if os.access(os.path.dirname(path), os.W_OK):
+                out_path = so_path
+            else:
+                self.get_logger().warning(f'Library path {os.path.dirname(path)} is not writable, falling back to ~/.ros/ackermann_nlmpc/')
+                os.makedirs(os.path.dirname(so_fallback_path), exist_ok=True)
+                out_path = so_fallback_path
+            self._compile_lib(c_path, out_path)
+            load_path = out_path
+        # If path parameter ends with .so, just load it.
+        elif ext == '.so':
+            if os.path.exists(so_path):
+                load_path = so_path
+            else:
+                self.get_logger().error(f'File {so_path} does not exist.')
+                raise FileNotFoundError(f'File {so_path} does not exist.')
+        # No file extension, check for .so and .c file
         else:
             self.get_logger().debug('Checking for existing .so file...')
-            if not os.path.exists(path + '.so'):
+            if not os.path.exists(so_path):
                 self.get_logger().debug('No .so file found, checking for .c file...')
-                if not os.path.exists(path + '.c'):
+                if not os.path.exists(c_path):
                     self.get_logger().error(f'No .c or .so file found at {lib_path}.')
-                    raise FileNotFoundError(f'No .c or .so file found at {lib_path}.')    
-                self._compile_lib(path)
+                    raise FileNotFoundError(f'No .c or .so file found at {lib_path}.')
+                # Check if path is writable
+                if os.access(os.path.dirname(path), os.W_OK):
+                    self._compile_lib(c_path, so_path)
+                    load_path = so_path
+                else:
+                    self.get_logger().warning(f'Library path {os.path.dirname(path)} is not writable, falling back to ~/.ros/ackermann_nlmpc/')
+                    os.makedirs(os.path.dirname(so_fallback_path), exist_ok=True)
+                    # Check if fallback .so file exists and is up to date
+                    if os.path.exists(so_fallback_path):
+                        c_mtime = os.path.getmtime(c_path)
+                        so_mtime = os.path.getmtime(so_fallback_path)
+                        if c_mtime > so_mtime:
+                            self.get_logger().debug('C file is newer than existing fallback .so file, recompiling...')
+                            self._compile_lib(c_path, so_fallback_path)
+                        else:
+                            self.get_logger().debug('Fallback .so file is up to date.')
+                    else:
+                        self._compile_lib(c_path, so_fallback_path)
+                    load_path = so_fallback_path
+            # Found .so file, check if up to date
             else:
                 self.get_logger().debug('Found .so file, checking if it is up to date...')
-                if os.path.exists(path + '.c'):
-                    c_mtime = os.path.getmtime(path + '.c')
-                    so_mtime = os.path.getmtime(path + '.so')
+                if os.path.exists(c_path):
+                    c_mtime = os.path.getmtime(c_path)
+                    so_mtime = os.path.getmtime(so_path)
                     if c_mtime > so_mtime:
-                        self.get_logger().debug('C file is newer than existing .so file, recompiling...')
-                        self._compile_lib(path)
+                        if os.access(os.path.dirname(path), os.W_OK):
+                            self.get_logger().debug('C file is newer than existing .so file, recompiling...')
+                            self._compile_lib(c_path, so_path)
+                        else:
+                            self.get_logger().warning(f'C file is newer than existing .so file, but library path {os.path.dirname(path)} is not writable. Using existing .so file.')
                     else:
                         self.get_logger().debug('.so file is up to date.')
                 else:
                     self.get_logger().debug('No .c file found, using existing .so file.')
-        lib_path = path + '.so'
-        self.get_logger().info(f'Loading MPC library: {lib_path}')
+                load_path = so_path
+        self.get_logger().info(f'Loading MPC library: {load_path}')
 
         # Load library and setup function pointer
-        self._lib = UnloadableCDLL(lib_path)
+        self._lib = UnloadableCDLL(load_path)
         self._mpc_fun = self._lib.autompc_run
         self._mpc_fun.argtypes = [
             ctypes.POINTER(ctypes.c_double),  # t
@@ -373,13 +414,13 @@ class NLMPCNode(Node):
         self._mpc_state = (ctypes.c_double * 88)()
         self._control = [0.0, 0.0]
 
-    def _compile_lib(self, path: str):
+    def _compile_lib(self, in_path: str, out_path: str):
         """Compile the MPC library C code into a .so file."""
-        self.get_logger().info(f'Compiling MPC library from {path}...')
-        compile_cmd = f'gcc -fPIC -shared -o {path}.so {path}.c'
+        self.get_logger().info(f'Compiling MPC library from {in_path}...')
+        compile_cmd = f'gcc -fPIC -shared -o {out_path} {in_path}'
         result = os.system(compile_cmd)
         if result != 0:
-            self.get_logger().error(f'Failed to compile MPC library: {compile_cmd}')
+            self.get_logger().error(f'Failed to compile MPC library with command: {compile_cmd}, exit code {result}.')
             raise RuntimeError('MPC library compilation failed')
         self.get_logger().info('MPC library compiled successfully.')
 
