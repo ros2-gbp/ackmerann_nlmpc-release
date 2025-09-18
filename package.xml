@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ackermann_nlmpc</name>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <description>Lightweight non-linear MPC controller for autonomous driving in 2D environments</description>
   <maintainer email="j.pflughaupt@uni-luebeck.de">Jasper Pflughaupt</maintainer>
   <author email="georg.schildbach@uni-luebeck.de">Georg Schildbach</author>
