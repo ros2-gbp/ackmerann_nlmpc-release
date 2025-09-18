@@ -5,7 +5,11 @@ def generate_launch_description():
     # common parameters
     base_link_frame = 'base_link'  # name of the base link coordinate frame
     odom_frame = 'odom'  # name of the odometry coordinate frame
-    lib_path = 'codegen/autompc_ros'  # path to the shared library, relative paths are assumed to be relative to the package path, absolute paths are possible. File extension may be omitted, the node will automatically choose a .so file if present or compile a .c file.
+    lib_path = 'codegen/autompc_ros'  # Path to the shared library file, relative paths are assumed to be relative to the package path, absolute paths are possible.
+                                      # Including a .c file extension will always recompile the library.
+                                      # Including a .so file extension will just load the .so file.
+                                      # When omitting the file extension the node will check for .c and .so files and compile if no .so file is present or the .c was modified more recently than the .so file.
+                                      # If the lib_path is not writable the node will fall back to the ~/.ros/ackermann_nlmpc/ directory.
     dt = 0.1  # sampling time [s], must match the sampling time used in the MPC code generation
     max_nodes = 2500  # maximum number of nodes in the path, must match the maximum number of nodes used in the MPC code generation
     horizon = 40 # prediction horizon [time steps], must match the prediction horizon used in the MPC code generation
