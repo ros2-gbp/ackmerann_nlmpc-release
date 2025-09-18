@@ -11,6 +11,12 @@ Note that this NLMPC implementation is not a path planner, but a trajectory trac
 
 ## Installation
 
+This package depends on 'transforms3d', which can be installed via pip:
+
+```bash
+pip install transforms3d
+```
+
 Clone this repository into your ROS2 workspace and build it using colcon:
 
 ```bash
