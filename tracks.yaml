@@ -78,4 +78,5 @@ tracks:
     ros_distro: rolling
     vcs_type: git
     vcs_uri: https://git.ime.uni-luebeck.de/public-projects/asl/ackermann_nlmpc.git
-    version: :{auto}
+    version: 1.0.3
+    version_saved: :{auto}
