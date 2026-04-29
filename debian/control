@@ -1,0 +1,12 @@
+Source: ros-lyrical-ackermann-nlmpc
+Section: misc
+Priority: optional
+Maintainer: Jasper Pflughaupt <j.pflughaupt@uni-luebeck.de>
+Build-Depends: debhelper (>= 9.0.0), python3-pytest <!nocheck>, ros-lyrical-ackermann-msgs, ros-lyrical-ackermann-nlmpc-msgs, ros-lyrical-ament-pep257 <!nocheck>, ros-lyrical-geometry-msgs, ros-lyrical-nav-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace, python3-all, python3-setuptools, dh-python
+Homepage: https://index.ros.org/p/ackermann_nlmpc/#lyrical
+Standards-Version: 3.9.2
+
+Package: ros-lyrical-ackermann-nlmpc
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, ros-lyrical-ackermann-msgs, ros-lyrical-ackermann-nlmpc-msgs, ros-lyrical-geometry-msgs, ros-lyrical-nav-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Description: Lightweight non-linear MPC controller for autonomous driving in 2D environments
